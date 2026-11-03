@@ -1,0 +1,28 @@
+# main へのプッシュと PR のたびに、ビルドとテストが通るかを確かめる
+name: ビルド
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    # WinForms は Windows でしかビルドできない
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: 復元
+        run: dotnet restore CastSieve.sln
+
+      - name: ビルド
+        run: dotnet build CastSieve.sln -c Release --no-restore
+
+      - name: テスト
+        run: dotnet test CastSieve.sln -c Release --no-build

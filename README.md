@@ -23,10 +23,21 @@
 - ComfyUI: PNG の `prompt`(KSampler の positive につながるノードをたどり、ネガティブは除く)
 - InvokeAI: PNG の `invokeai_metadata`
 
+## ダウンロード
+
+[Releases](https://github.com/yuu10/CastSieve/releases) から `CastSieve-<バージョン>-win-x64.zip` をダウンロードして展開し、`CastSieve.exe` を実行してください。インストールは不要で、.NET も入れる必要はありません。
+
+### 初めて起動するとき(SmartScreen の警告)
+
+CastSieve の exe にはコード署名をしていません。そのため、ダウンロードした exe を初めて開くと、「Windows によって PC が保護されました」という画面が出ることがあります。
+
+起動するには、「詳細情報」をクリックしてから「実行」を押してください。2回目からは表示されません。
+
+ウイルス対策ソフトが誤って警告することもあります。気になる場合は、下の「開発者向けの情報」の手順でソースコードからビルドしてください。
+
 ## 動作環境
 
 - Windows 10 / 11(64 ビット)
-- [.NET 8 デスクトップ ランタイム](https://dotnet.microsoft.com/download/dotnet/8.0)
 - インターネット接続(Danbooru への問い合わせと、モデルのダウンロードに使います。2 回目以降はキャッシュを使います)
 - 画像からの推定を GPU で動かす場合は、DirectX 12 に対応した GPU(なければ CPU で動きます)
 
@@ -107,6 +118,17 @@ dotnet publish src/CastSieve.App -c Release -r win-x64 --self-contained false
 ```
 
 `CastSieve.sln` を Visual Studio 2022 で開いてもビルドできます。
+
+main へのプッシュと PR のたびに、GitHub Actions でビルドとテストが通るかを確かめています(`.github/workflows/build.yml`)。
+
+### リリースの手順
+
+1. `Directory.Build.props` の `<Version>` を上げて、main にマージする
+2. 同じバージョンのタグを付けて push する(例: `git tag v1.6.0` → `git push origin v1.6.0`)
+3. GitHub Actions(`.github/workflows/release.yml`)が、テストのあと自己完結型の単一 exe(.NET のインストール不要)を発行し、`LICENSE` と `THIRD-PARTY-NOTICES.txt` と一緒に zip にまとめて、Releases に**下書き**で載せる。タグと `<Version>` が違うと止まる
+4. Releases で下書きを開き、「変更点」を書いて「Publish release」を押す
+
+単一 exe は、ONNX Runtime・DirectML・Skia のネイティブ DLL を中に持ち、起動時に一時フォルダへ展開します(`IncludeNativeLibrariesForSelfExtract`)。exe は約 80MB です。
 
 マニュアルの元は `src/CastSieve.App/Help/manual.html` で、アプリに埋め込まれます。アイコンは `src/CastSieve.App/Assets/app.ico` です。
 

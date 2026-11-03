@@ -19,8 +19,7 @@ TestResults/
 *.trx
 coverage*/
 
-# 配布物・モデル
-CastSieve.zip
+# モデル
 *.onnx
 
 # OS

@@ -35,7 +35,7 @@ CastSieve/
   README.md                    開発者向けの説明
 ```
 パッケージ: `Microsoft.ML.OnnxRuntime.DirectML` 1.20.1(MIT、依存の DirectML 1.15.2 は Microsoft 独自ライセンスだが再配布可)、`SkiaSharp` 4.154.0(MIT)。ライセンス文と一致させるため、バージョンは固定する。
-- ライセンス: 本体は MIT(Copyright (c) 2026 yuto、PromptLoupe と同じ)。`LICENSE` と `THIRD-PARTY-NOTICES.txt` は App の出力先にコピーされる。WD Tagger のモデルは Apache-2.0 で、同梱しない。
+- ライセンス: 本体は MIT(Copyright (c) 2026 yuto、PromptLoupe と同じ)。`LICENSE` と `THIRD-PARTY-NOTICES.txt` は App の出力先にコピーされる。WD Tagger のモデルは Apache-2.0 で、同梱しない。配布用の exe は自己完結なので、`THIRD-PARTY-NOTICES.txt` に .NET 8 ランタイム(`microsoft.netcore.app.runtime.win-x64` の LICENSE.TXT と THIRD-PARTY-NOTICES.TXT)と WindowsDesktop(LICENSE)も入れている。
 - 1.3.3 で ImageSharp をやめた(4.x は Release ビルドにライセンスキーが必須になったため)。Mac 版を見据えて System.Drawing ではなく SkiaSharp にした。
 - 画像処理は `Imaging/SkiaImage.cs` に集約(EXIF の向きは自前で回転、大きく縮小するときは先にミップマップ付き線形で縮めてからキュービック)。SkiaSharp は BMP を書き出せないので、`ThumbnailMaker` が 24 ビット BMP を自前で組み立てる。
 

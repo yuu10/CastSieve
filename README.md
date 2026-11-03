@@ -96,7 +96,7 @@ CastSieve は [MIT License](LICENSE) で配布しています(Copyright (c) 2026
 - [SkiaSharp](https://github.com/mono/SkiaSharp)(MIT License)— 画像の読み込みと縮小
 - [ONNX Runtime](https://github.com/microsoft/onnxruntime)(MIT License)— 画像からの推定
 - [DirectML](https://github.com/microsoft/DirectML)(Microsoft Software License Terms)— 推定の GPU 実行
-- .NET / Windows Forms(MIT License)
+- .NET 8 ランタイム / Windows Forms(MIT License)— 配布用の exe に含まれています
 
 これらのライセンス文は [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) にあります。`LICENSE` と `THIRD-PARTY-NOTICES.txt` は、ビルド・発行のたびに出力先へコピーされます。配布するときは、この2つを exe と一緒に入れてください。
 

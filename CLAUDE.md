@@ -5,7 +5,8 @@ C# / .NET 8 / WinForms。判別は Danbooru API(タグカテゴリ 4 = character
 
 ## 作業ルール
 - 返信は日本語で、簡潔に。
-- 説明は **アプリ内マニュアル `src/CastSieve.App/Help/manual.html`(利用者向け)と `README.md`(開発者向け: ビルド、仕組み、構成、制限)の2つ**。これ以外のドキュメントは作らない。
+- 説明は **アプリ内マニュアル `src/CastSieve.App/Help/manual.html`(利用者向け)と `README.md`(前半は公開向けの紹介、後半「開発者向けの情報」にビルド・仕組み・構成)の2つ**。これ以外のドキュメントは作らない(ライセンス文の `LICENSE` と `THIRD-PARTY-NOTICES.txt` は別)。
+- パッケージを足したり、バージョンを上げたりしたら、`THIRD-PARTY-NOTICES.txt`(NuGet キャッシュのライセンス文を連結したもの)、README とマニュアルの「ライセンス」も直す。
 - 機能を足したら、マニュアル(更新履歴を含む)、README、バージョン(`Directory.Build.props`)を一緒に更新する。更新履歴はマニュアルにだけ書く。
 - 「実装しないで答えだけ」と言われたら、実装せず、可否と方針だけ答える。
 - ビルド: `dotnet build CastSieve.sln`、テスト: `dotnet test`。変更したら必ずビルドとテストを通す(Claude.ai 版では SDK がなく確認できなかった)。
@@ -33,7 +34,8 @@ CastSieve/
   tests/CastSieve.Tests/       xUnit
   README.md                    開発者向けの説明
 ```
-パッケージ: `Microsoft.ML.OnnxRuntime.DirectML` 1.20.*、`SkiaSharp` 4.154.0(MIT)。
+パッケージ: `Microsoft.ML.OnnxRuntime.DirectML` 1.20.1(MIT、依存の DirectML 1.15.2 は Microsoft 独自ライセンスだが再配布可)、`SkiaSharp` 4.154.0(MIT)。ライセンス文と一致させるため、バージョンは固定する。
+- ライセンス: 本体は MIT(Copyright (c) 2026 yuto、PromptLoupe と同じ)。`LICENSE` と `THIRD-PARTY-NOTICES.txt` は App の出力先にコピーされる。WD Tagger のモデルは Apache-2.0 で、同梱しない。
 - 1.3.3 で ImageSharp をやめた(4.x は Release ビルドにライセンスキーが必須になったため)。Mac 版を見据えて System.Drawing ではなく SkiaSharp にした。
 - 画像処理は `Imaging/SkiaImage.cs` に集約(EXIF の向きは自前で回転、大きく縮小するときは先にミップマップ付き線形で縮めてからキュービック)。SkiaSharp は BMP を書き出せないので、`ThumbnailMaker` が 24 ビット BMP を自前で組み立てる。
 
@@ -87,10 +89,10 @@ CastSieve/
 
 ## 今後の候補
 - 画像推定の精度(約半分が決まらない): **優先度を下げた**(2026-11)。決まらない画像の多くは候補すら出ず、モデルが知らないキャラが原因なので、反転の平均化などでは改善しない。推定はおまけで、本命はメタデータでの仕分け。やるなら見本画像との類似度で判定する方式。
-- 公開に向けて体裁を整える: ライセンス表記(SkiaSharp、OnnxRuntime、WD モデル)、README の公開向け整理、配布形態。
+- 公開に向けて: ライセンス表記、README の整理、スクリーンショット(`docs/images/main.png`)は済み。残りは、配布形態(PromptLoupe と同じく GitHub Actions でビルド確認とリリース zip、SmartScreen の説明)、リポジトリ yuu10/CastSieve の Public 化。
 - exe のアイコンが変わらない: クリーン→リビルド、アイコンキャッシュ(`ie4uinit.exe -show`)、別フォルダへコピー。
 - ダークモード(1.5.0): .NET 8 のまま自前で色を当てる(`Theme.cs`)。「表示」→「テーマ」でシステム / ライト / ダーク、既定はシステム。標準ダイアログと NumericUpDown の上下ボタンは明るいまま。
 - 制限: NovelAI のステルス PNGInfo(アルファチャンネル埋め込み)は未対応。
 
 ## バージョン履歴(詳細は manual.html)
-1.6.0 CastSieve に改名・旧データフォルダの引き継ぎ・アイコン変更(ふるい) / 1.5.0 ダークモード / 1.4.0 仕分け先の手動指定・推定の候補表示・列の並べ替え・ファイルを開く / 1.3.3 ImageSharp → SkiaSharp / 1.3.2 上書きリストをタブ化、タブ高さを統一 / 1.3.1 ビルドエラー修正、ImageSharp 4.1.1 / 1.3.0 見た目改修・タブ化・D&D・要約・グループ表示 / 1.2.1 中止時の例外停止を修正 / 1.2.0 アイコン変更 / 1.1.0 解析と実行の分離・GPU 対応 / 1.0.0 初版
+1.6.0 CastSieve に改名・旧データフォルダの引き継ぎ・アイコン変更(ふるい)・ライセンス表記 / 1.5.0 ダークモード / 1.4.0 仕分け先の手動指定・推定の候補表示・列の並べ替え・ファイルを開く / 1.3.3 ImageSharp → SkiaSharp / 1.3.2 上書きリストをタブ化、タブ高さを統一 / 1.3.1 ビルドエラー修正、ImageSharp 4.1.1 / 1.3.0 見た目改修・タブ化・D&D・要約・グループ表示 / 1.2.1 中止時の例外停止を修正 / 1.2.0 アイコン変更 / 1.1.0 解析と実行の分離・GPU 対応 / 1.0.0 初版

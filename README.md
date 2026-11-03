@@ -1,31 +1,116 @@
-# CastSieve(キャラクタータグ仕分けツール / C# / .NET 8)
+# CastSieve
 
-生成AI画像に埋め込まれたプロンプトからタグを取り出し、**Danbooru のタグカテゴリ(character)** でキャラクターを自動判別して、キャラクター別フォルダに仕分ける Windows アプリです。
+生成AI画像に埋め込まれたプロンプトからキャラクターを判別して、キャラクター別のフォルダに仕分ける Windows アプリです(C# / WinForms / .NET 8)。
 
-## ビルドと実行
+キャラクターかどうかは、プロンプトのタグを **Danbooru のタグ情報(カテゴリ: character)** で調べて判断します。メタデータが消えている画像は、オプションで画像そのものからキャラクターを推定することもできます。
+
+![CastSieve のメイン画面。上に入力・出力フォルダとオプションのタブ、下に解析結果の一覧があり、サムネイル・メタデータの種類・検出キャラクター・仕分け先・状態が仕分け先ごとにまとまっている](docs/images/main.png)
+
+## 機能
+
+- **解析してから実行**: まず「解析して確認」で仕分け結果を一覧で確認し(ファイルは変更しません)、問題なければ「この結果で実行」でコピーまたは移動します
+- **手で直せる**: 一覧で右クリック(または `F2`)して、選んだ画像の仕分け先を手で決められます
+- **複数キャラの扱い**: `_multiple` にまとめる / 最初の1人のフォルダに入れる / 各キャラのフォルダにコピー、から選べます
+- **上書きリスト**: `タグ,フォルダ名` の CSV で、フォルダ名を好きな名前に変えられます(例: `hatsune miku,初音ミク`)
+- **画像からの推定(任意)**: メタデータのない画像を WD Tagger のモデルで解析し、キャラクターを推定します。GPU(DirectML)にも対応しています
+- **一覧の表示**: サムネイル、仕分け先ごとのグループ表示、列での並べ替え、ダークモード
+- **ログ**: 実行すると、出力フォルダに `sort_log_日時.csv`(元ファイル・メタデータの種類・検出したキャラクター・仕分け先)を保存します
+
+### 対応しているメタデータ
+
+- AUTOMATIC1111 / Forge: PNG の `parameters`、JPEG / WebP の Exif UserComment
+- NovelAI: PNG の `Comment` / `Description`(V4 のキャラクター別プロンプトを含む)
+- ComfyUI: PNG の `prompt`(KSampler の positive につながるノードをたどり、ネガティブは除く)
+- InvokeAI: PNG の `invokeai_metadata`
+
+## 動作環境
+
+- Windows 10 / 11(64 ビット)
+- [.NET 8 デスクトップ ランタイム](https://dotnet.microsoft.com/download/dotnet/8.0)
+- インターネット接続(Danbooru への問い合わせと、モデルのダウンロードに使います。2 回目以降はキャッシュを使います)
+- 画像からの推定を GPU で動かす場合は、DirectX 12 に対応した GPU(なければ CPU で動きます)
+
+## 使い方
+
+1. 入力フォルダと出力フォルダを選ぶ(ドラッグ&ドロップでも指定できます)
+2. 「解析して確認」を押し、一覧で仕分け結果を確認する(ファイルは変更されません)
+3. 必要なら、一覧で右クリック(または `F2`)して、選んだ画像の仕分け先を手で直す
+4. 問題なければ「この結果で実行」を押す(コピーか移動かは「操作」で選びます)。再解析はせず、確認した結果のとおりに仕分けます。設定を変えると結果は無効になり、解析し直しが必要です(「操作」の切り替えを除く)
+
+詳しい使い方は、アプリのメニュー「ヘルプ」→「使い方」(`F1`)で開くマニュアルにあります。
+
+### 仕分け先の特別なフォルダ
+
+| フォルダ | 入る画像 |
+|---|---|
+| `_unknown` | プロンプトはあるが、キャラクターのタグがない |
+| `_no_metadata` | メタデータがない(画像からの推定でも決まらなかった) |
+| `_multiple` | 複数のキャラクターが含まれる(「複数キャラ」の設定による) |
+
+### オプション
+
+| タブ | 項目 | 説明 |
+|---|---|---|
+| 基本 | サブフォルダも対象 | 入力フォルダの下のフォルダも読む |
+| 基本 | 操作 | コピー / 移動 |
+| 基本 | 複数キャラ | `_multiple` に入れる / 最初の1人のみ / 各フォルダにコピー |
+| 判別 (Danbooru) | Danbooruで判別 | オフにすると通信せず、キャッシュと簡易判定のみで仕分け |
+| 判別 (Danbooru) | 別名タグも解決 | 初回のみ時間がかかる(存在しないタグ 1 つにつき 1 リクエスト) |
+| 判別 (Danbooru) | 最小投稿数 | 投稿数がこの値未満のキャラクタータグを無視(誤検出対策) |
+| 画像から推定 | 使う / モデル / しきい値 / GPU | 下の「画像からの推定」を参照 |
+| 仕分け先 | 空白を `_` に | フォルダ名の空白を `_` に置き換える |
+| 仕分け先 | `_unknown` / `_no_metadata` も仕分ける | オフにすると、その画像は「対象外」になり動かさない |
+| 上書きリスト | ファイル | `タグ,フォルダ名` の CSV。Danbooru の判定より優先(例: `hatsune miku,初音ミク`) |
+
+## 通信とデータの保存
+
+- **Danbooru**: 送るのはタグ名だけです。画像や、画像のファイル名・パスは送りません。リクエストの間隔は 250ms 以上空けています
+- **Hugging Face**: 「画像から推定」を初めて使うとき、確認のうえでモデルをダウンロードします
+- これ以外の通信(利用状況の送信など)はしません
+- 設定、Danbooru の問い合わせ結果のキャッシュ、モデルは `%LOCALAPPDATA%\CastSieve\` に保存します。アンインストールするときは、このフォルダも消してください
+
+## 制限事項
+
+- NovelAI の「ステルス PNGInfo」(アルファチャンネルへの埋め込み)には対応していません
+- SNS などでメタデータが消された画像は、標準では `_no_metadata` に入ります(「画像から推定」をオンにすると推定できます)
+- 画像からの推定は、投稿数の多い有名なキャラクターほど当たりやすく、マイナーなキャラクターや自作のキャラクターは苦手です
+- `solo` のようなタグがなくても、プロンプトに複数のキャラクターが含まれれば、複数キャラとして扱います
+
+## ライセンス
+
+CastSieve は [MIT License](LICENSE) で配布しています(Copyright (c) 2026 yuto)。
+
+### 使用しているライブラリ
+
+- [SkiaSharp](https://github.com/mono/SkiaSharp)(MIT License)— 画像の読み込みと縮小
+- [ONNX Runtime](https://github.com/microsoft/onnxruntime)(MIT License)— 画像からの推定
+- [DirectML](https://github.com/microsoft/DirectML)(Microsoft Software License Terms)— 推定の GPU 実行
+- .NET / Windows Forms(MIT License)
+
+これらのライセンス文は [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) にあります。`LICENSE` と `THIRD-PARTY-NOTICES.txt` は、ビルド・発行のたびに出力先へコピーされます。配布するときは、この2つを exe と一緒に入れてください。
+
+### モデルとデータ
+
+- 画像からの推定に使う [WD Tagger v3](https://huggingface.co/SmilingWolf)(SmilingWolf)のモデルは Apache License 2.0 です。CastSieve には同梱せず、利用者が Hugging Face から直接ダウンロードします
+- キャラクターの判別には [Danbooru](https://danbooru.donmai.us/) の公開 API を使います。CastSieve は Danbooru とは関係のない非公式のツールです
+
+## 開発者向けの情報
+
+### ビルドと実行
 
 必要なもの: .NET 8 SDK(Windows)
 
 ```
-dotnet test                                  # テスト(Core のみ。Linux/macOS でも可)
-dotnet run --project src/CastSieve.App # GUI を起動
+dotnet test                                    # テスト(Core のみ。Linux/macOS でも可)
+dotnet run --project src/CastSieve.App         # GUI を起動
 dotnet publish src/CastSieve.App -c Release -r win-x64 --self-contained false
 ```
 
 `CastSieve.sln` を Visual Studio 2022 で開いてもビルドできます。
 
-## 使い方
+マニュアルの元は `src/CastSieve.App/Help/manual.html` で、アプリに埋め込まれます。アイコンは `src/CastSieve.App/Assets/app.ico` です。
 
-1. 入力フォルダと出力フォルダを選ぶ
-2. 「解析して確認」で仕分け結果を確認(ファイルは変更されません)
-3. 必要なら、一覧で右クリック(または `F2`)して、選んだ画像の仕分け先を手で直す(下の「仕分け先の手動指定」)
-4. 問題なければ「この結果で実行」(コピー or 移動)。再解析はせず、確認した結果のとおりに仕分けます。設定を変えると結果は無効になり、解析し直しが必要です(「操作」の切り替えを除く)
-
-アプリ内のマニュアルは、メニューの「ヘルプ」→「使い方」(`F1`)で開けます。マニュアルの元になっているのは `src/CastSieve.App/Help/manual.html` で、内容を直したいときはこのファイルを編集してください(アプリに埋め込まれます)。アイコンは `src/CastSieve.App/Assets/app.ico` です。
-
-実行すると出力フォルダに `sort_log_日時.csv`(元ファイル・メタデータ種別・検出キャラクター・移動先)が保存されます。
-
-## キャラクター判別の仕組み
+### キャラクター判別の仕組み
 
 1. 画像のメタデータからポジティブプロンプトを取り出し、重み `(tag:1.2)`、強調 `[]{}`、`<lora:...>` を除いてタグに分解
 2. 未知のタグをまとめて Danbooru API に照会し、**カテゴリ 4 (character)** のものをキャラクターとみなす
@@ -36,7 +121,7 @@ dotnet publish src/CastSieve.App -c Release -r win-x64 --self-contained false
 
 **通信内容**: Danbooru に送るのはタグ名だけで、画像や画像のパスは送りません。リクエスト間隔は 250ms 以上空け、429/5xx は待って再試行します。
 
-## 仕分け先の手動指定
+### 仕分け先の手動指定
 
 解析のあと、実行の前に、一覧で選んだ画像の仕分け先を手で決められます。
 
@@ -47,13 +132,13 @@ dotnet publish src/CastSieve.App -c Release -r win-x64 --self-contained false
 - 候補: 推定でしきい値に届かなかったキャラクター(確信度 0.1 以上、最大5人)を `SortItem.CandidateCharacters` に残し、上書きリストを反映したフォルダ名を `CandidateFolders` に入れます。右クリックメニューの「候補: …」と、ダイアログの選択肢に使います
 - `IImageTagger.PredictCharacters` はしきい値で絞らず返し、しきい値による採用と候補の振り分けは `SortService` が行います
 
-## 一覧の並べ替えと、画像を開く
+### 一覧の並べ替えと、画像を開く
 
 - 見出しをクリックすると、その列で昇順/降順を切り替えます(`ListViewColumnSorter`)。比較は `StrCmpLogicalW` を使うのでエクスプローラーと同じ順になり、同じ値どうしはファイル名で並べます。見出しに ▲/▼ を付けます
 - 解析中や実行中は並べ替えず(行を足すたびに並べ替わって遅くなるため)、終わってからまとめて並べ替えます。標準(どの列もクリックしていないとき)は解析した順で、ファイル名の昇順です
 - 行のダブルクリック・`Enter`(`ItemActivate`)と右クリックの「ファイルを開く」で、`UseShellExecute` で関連付けられたアプリで開きます。開くのはフォーカスのある1枚だけです。移動した後は移動先を開きます
 
-## サムネイル表示
+### サムネイル表示
 
 結果の一覧に画像のサムネイルを表示します。メニュー「表示」で、オン/オフとサイズ(48 / 80 / 120px)を切り替えられます(`%LOCALAPPDATA%\CastSieve\settings.json` に保存。サムネイル自体は保存しません)。
 
@@ -62,7 +147,7 @@ dotnet publish src/CastSieve.App -c Release -r win-x64 --self-contained false
 - 作ったサムネイルは LRU キャッシュ(300枚)に置き、超えた分は破棄します
 - オフのときはオーナードロー自体を止めるので、サムネイル関連の処理は動きません
 
-## 画像からの推定(メタデータがない画像用)
+### 画像からの推定(メタデータがない画像用)
 
 オプション「メタデータなしの画像は画像から推定」をオンにすると、メタデータのない画像を [WD Tagger](https://huggingface.co/SmilingWolf)(SmilingWolf)の ONNX モデルにかけ、キャラクタータグを推定します。
 
@@ -72,9 +157,8 @@ dotnet publish src/CastSieve.App -c Release -r win-x64 --self-contained false
 - モデルは初回に Hugging Face から `%LOCALAPPDATA%\CastSieve\models\<モデル名>\` へダウンロードします(`model.onnx` と `selected_tags.csv`)。手動で置いても使えます
 - メタデータのある画像は推定しません。推定結果は確信度(しきい値 標準 0.85)以上のキャラクターだけ採用し、上書きリストを反映します
 - 推定で決まった画像は、一覧とログの「メタデータ」列が `image-ai` になります
-- ライセンス: SkiaSharp は MIT ライセンスです。各モデルのライセンスは配布元で確認してください
 
-## テーマ(ダークモード)
+### テーマ(ダークモード)
 
 メニュー「表示」→「テーマ」で、システムに合わせる(既定)/ ライト / ダークを選びます(`settings.json` の `Theme`)。.NET 8 の WinForms には標準のダークモードがないので、自前で色を当てています(`Theme.cs`)。
 
@@ -89,35 +173,7 @@ dotnet publish src/CastSieve.App -c Release -r win-x64 --self-contained false
 - 「システムに合わせる」のときは `SystemEvents.UserPreferenceChanged` で Windows の切り替えに追従します(判定はレジストリの `AppsUseLightTheme`)
 - 制限: MessageBox やフォルダ選択などの標準ダイアログ、NumericUpDown の上下ボタンは明るいまま
 
-## オプション
-
-オプションはタブで分かれています。
-
-| タブ | 項目 | 説明 |
-|---|---|---|
-| 基本 | サブフォルダも対象 | 入力フォルダの下のフォルダも読む |
-| 基本 | 操作 | コピー / 移動 |
-| 基本 | 複数キャラ | `_multiple` に入れる / 最初の1人のみ / 各フォルダにコピー |
-| 判別 (Danbooru) | Danbooruで判別 | オフにすると通信せず、キャッシュと簡易判定のみで仕分け |
-| 判別 (Danbooru) | 別名タグも解決 | 初回のみ時間がかかる(存在しないタグ 1 つにつき 1 リクエスト) |
-| 判別 (Danbooru) | 最小投稿数 | 投稿数がこの値未満のキャラクタータグを無視(誤検出対策) |
-| 画像から推定 | 使う / モデル / しきい値 / GPU | 上の「画像からの推定」を参照 |
-| 仕分け先 | 空白を `_` に | フォルダ名の空白を `_` に置き換える |
-| 仕分け先 | `_unknown` / `_no_metadata` も仕分ける | オフにすると、その画像は「対象外」になり動かさない |
-| 上書きリスト | ファイル | `タグ,フォルダ名` の CSV。Danbooru の判定より優先(例: `hatsune miku,初音ミク`) |
-
-## 仕分け先の特別フォルダ
-
-`_unknown`(キャラクタータグなし)/ `_no_metadata`(メタデータなし)/ `_multiple`(複数キャラクター)
-
-## 対応メタデータ
-
-- AUTOMATIC1111 / Forge: PNG `parameters`、JPEG/WebP の Exif UserComment
-- NovelAI: PNG `Comment` / `Description`(V4 のキャラクター別プロンプトを含む)
-- ComfyUI: PNG `prompt`(KSampler の positive 接続を辿り、ネガティブを除外)
-- InvokeAI: PNG `invokeai_metadata`
-
-## 構成
+### 構成
 
 ```
 src/CastSieve.Core   読み取り・タグ解析・Danbooru 連携・仕分け (net8.0)
@@ -126,10 +182,3 @@ tests/CastSieve.Tests xUnit (Danbooru は偽サーバーで検証)
 ```
 
 設定 (`settings.json`)、Danbooru のキャッシュ、モデルは `%LOCALAPPDATA%\CastSieve\` に置きます(`AppPaths.DataRoot`)。1.6.0 で M Sorter から改名したため、起動時に `AppPaths.MigrateFromOldName()` が、旧フォルダ `%LOCALAPPDATA%\MSorter\` があって新フォルダがないときだけ、フォルダごと移します。
-
-## 制限事項
-
-- NovelAI の「ステルス PNGInfo」(アルファチャンネル埋め込み)は未対応
-- SNS 等でメタデータが削除された画像は、標準では `_no_metadata` に入ります(「画像から推定」をオンにすると推定できます)
-- 画像からの推定は、投稿数の多い有名なキャラクターほど当たりやすく、マイナーなキャラクターや自作キャラクターは苦手です
-- `solo` のようなタグがなくても、プロンプトに複数キャラが含まれれば複数キャラ扱いになります

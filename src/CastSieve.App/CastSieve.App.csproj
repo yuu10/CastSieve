@@ -15,6 +15,11 @@
     <EmbeddedResource Include="Help\manual.html" />
   </ItemGroup>
   <ItemGroup>
+    <!-- 配布物に同梱するライセンス文(ビルド・発行の出力先にコピーする) -->
+    <None Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\CastSieve.Core\CastSieve.Core.csproj" />
   </ItemGroup>
 </Project>

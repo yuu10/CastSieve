@@ -44,6 +44,7 @@
   <li><a href="#overrides">上書きリストの書き方</a></li>
   <li><a href="#trouble">トラブルシューティング</a></li>
   <li><a href="#limits">制限事項</a></li>
+  <li><a href="#license">ライセンス</a></li>
   <li><a href="#changes">更新履歴</a></li>
 </ul>
 
@@ -231,9 +232,20 @@ rem (re:zero),レム</pre>
   <li>ネガティブプロンプトは見ないので、ネガティブ側にだけ書かれたキャラクターは対象外です</li>
 </ul>
 
+<h2 id="license">ライセンス</h2>
+<p>CastSieve は MIT License で配布しています(Copyright (c) 2026 yuto)。ライセンス文は、exe と同じフォルダの <code>LICENSE</code> にあります。</p>
+<p>CastSieve は、次のソフトウェアを使っています。それぞれのライセンス文は、exe と同じフォルダの <code>THIRD-PARTY-NOTICES.txt</code> にあります。</p>
+<ul>
+  <li>SkiaSharp(MIT License): 画像の読み込みと縮小</li>
+  <li>ONNX Runtime(MIT License): 画像からの推定</li>
+  <li>DirectML(Microsoft Software License Terms): 推定の GPU 実行</li>
+</ul>
+<p>画像からの推定に使う WD Tagger v3 のモデル(SmilingWolf)は Apache License 2.0 です。CastSieve には入っておらず、初めて使うときに Hugging Face からダウンロードします。</p>
+<p>キャラクターの判別には Danbooru の公開 API を使っています。CastSieve は Danbooru とは関係のない非公式のツールです。</p>
+
 <h2 id="changes">更新履歴</h2>
 <ul>
-  <li><b>1.6.0</b> アプリの名前を M Sorter から CastSieve に変えました。実行ファイルは <code>CastSieve.exe</code> になります(古いショートカットは作り直してください)。設定・Danbooru の照会結果・ダウンロード済みのモデルは、初回の起動時に <code>%LOCALAPPDATA%\MSorter</code> から <code>%LOCALAPPDATA%\CastSieve</code> へそのまま引き継ぎます。アイコンを、ふるいから3色の粒がこぼれ落ちる絵に変えました</li>
+  <li><b>1.6.0</b> アプリの名前を M Sorter から CastSieve に変えました。実行ファイルは <code>CastSieve.exe</code> になります(古いショートカットは作り直してください)。設定・Danbooru の照会結果・ダウンロード済みのモデルは、初回の起動時に <code>%LOCALAPPDATA%\MSorter</code> から <code>%LOCALAPPDATA%\CastSieve</code> へそのまま引き継ぎます。アイコンを、ふるいから3色の粒がこぼれ落ちる絵に変えました。ライセンス(MIT License)と、使っているソフトウェアのライセンス文(<code>LICENSE</code>、<code>THIRD-PARTY-NOTICES.txt</code>)を同梱し、この説明書に「ライセンス」の節を足しました</li>
   <li><b>1.5.0</b> ダークモードに対応しました。メニューの「表示」→「テーマ」で、システムに合わせる / ライト / ダークを選べます。この説明書もダークで表示されます</li>
   <li><b>1.4.0</b> 結果の一覧で右クリック(または <code>F2</code>)すると、選んだ画像の仕分け先を手で指定できるようにしました。画像からの推定でしきい値に届かなかったキャラクターを「候補」として表示し、そこから選べます。「自動の仕分け先に戻す」で元に戻せます。列の見出しのクリックで昇順・降順に並べ替え、行のダブルクリックや右クリックの「ファイルを開く」で画像を開けるようにしました。グループ表示をオフからオンに戻すと一覧が空になる不具合を直しました</li>
   <li><b>1.3.3</b> 画像ライブラリを ImageSharp から SkiaSharp(MIT ライセンス)に替えました。ImageSharp 4.x ではライセンスキーがないと配布用のビルドができなくなったためです。サムネイルと画像からの推定の動きは変わりません</li>

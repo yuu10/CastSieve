@@ -71,19 +71,21 @@ public class TaggerTests
         return path;
     }
 
-    private static SortOptions Options(string root, string input, bool infer, string? modelsDir = null) => new()
+    private static SortOptions Options(
+        string root, string input, bool infer, string? modelsDir = null, bool inferUnknown = true) => new()
     {
         InputDir = input,
         OutputDir = Path.Combine(root, "out"),
         Action = SortAction.Copy,
         UseDanbooru = false,
         InferFromImage = infer,
+        InferUnknown = inferUnknown,
         ModelsDir = modelsDir,
         CachePath = Path.Combine(root, "cache.json"),
     };
 
     [Fact]
-    public async Task Infers_characters_only_for_images_without_metadata()
+    public async Task Infers_characters_for_images_without_metadata()
     {
         string root = Path.Combine(Path.GetTempPath(), $"ms_infer_{Guid.NewGuid():N}");
         string input = Path.Combine(root, "in");
@@ -108,9 +110,47 @@ public class TaggerTests
             Assert.True(File.Exists(Path.Combine(output, "frieren", "no_meta.png")));
             Assert.True(File.Exists(Path.Combine(output, FolderNames.Unknown, "no_meta_nothing_found.png")));
 
-            // メタデータのある画像は推定にかけない
+            // タグでキャラクターが見つかった画像は推定にかけない
             Assert.DoesNotContain("with_meta.png", tagger.Calls);
             Assert.Equal(SortService.ImageInferredSource, report.Items.Single(i => i.Path.EndsWith("no_meta.png")).Source);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Infers_images_whose_tags_have_no_character_only_when_the_option_is_on(bool inferUnknown)
+    {
+        string root = Path.Combine(Path.GetTempPath(), $"ms_unknown_{Guid.NewGuid():N}");
+        string input = Path.Combine(root, "in");
+        Directory.CreateDirectory(input);
+
+        try
+        {
+            Png(input, "no_character.png", ("parameters", "1girl, smile\nNegative prompt: x\nSteps: 1"));
+            var tagger = new FakeTagger(_ => new[] { new TaggerPrediction("frieren", 0.95f) });
+
+            var report = await SortService.RunAsync(
+                Options(root, input, infer: true, inferUnknown: inferUnknown), null, null, CancellationToken.None, _ => tagger);
+
+            var item = report.Items.Single();
+            string output = Path.Combine(root, "out");
+            if (inferUnknown)
+            {
+                Assert.Equal(new[] { "no_character.png" }, tagger.Calls);
+                Assert.True(File.Exists(Path.Combine(output, "frieren", "no_character.png")));
+                Assert.Equal($"a1111 + {SortService.ImageInferredSource}", item.Source); // 形式名は残す
+            }
+            else
+            {
+                Assert.Empty(tagger.Calls);
+                Assert.True(File.Exists(Path.Combine(output, FolderNames.Unknown, "no_character.png")));
+                Assert.Equal("a1111", item.Source);
+            }
         }
         finally
         {

@@ -23,6 +23,10 @@ public sealed class MainForm : Form
 
     // 画像から推定
     private readonly CheckBox _infer = new() { Text = "メタデータなしの画像は画像から推定", AutoSize = true };
+    private readonly CheckBox _inferUnknown = new()
+    {
+        Text = "タグでキャラクターが分からない画像も推定", AutoSize = true, Checked = true, Enabled = false,
+    };
     private readonly ComboBox _model = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 200, Enabled = false };
     private readonly NumericUpDown _threshold = new()
     {
@@ -166,11 +170,11 @@ public sealed class MainForm : Form
         _cancelButton.Click += (_, _) => _cts?.Cancel();
         _useDanbooru.CheckedChanged += (_, _) => _aliases.Enabled = _useDanbooru.Checked;
         _infer.CheckedChanged += (_, _) =>
-            _model.Enabled = _threshold.Enabled = _useGpu.Enabled = _infer.Checked;
+            _inferUnknown.Enabled = _model.Enabled = _threshold.Enabled = _useGpu.Enabled = _infer.Checked;
 
         // 「操作(コピー/移動)」以外の設定を変えたら、解析の結果を無効にする
         Watch(_input, _output, _overrides, _recursive, _useDanbooru, _aliases, _minPosts,
-            _infer, _model, _threshold, _useGpu, _multi, _underscore, _includeUnknown, _includeNoMetadata);
+            _infer, _inferUnknown, _model, _threshold, _useGpu, _multi, _underscore, _includeUnknown, _includeNoMetadata);
 
         _list.DrawColumnHeader += OnDrawColumnHeader;
         _list.DrawItem += (_, _) => { }; // 詳細表示では、各列を DrawSubItem で描く
@@ -571,7 +575,7 @@ public sealed class MainForm : Form
         tabs.TabPages.Add(Page("基本", _recursive, Row(Caption("操作"), _action), Row(Caption("複数キャラ"), _multi)));
         tabs.TabPages.Add(Page("判別 (Danbooru)", _useDanbooru, _aliases, Row(Caption("最小投稿数"), _minPosts)));
         tabs.TabPages.Add(Page(
-            "画像から推定", _infer, Row(Caption("モデル"), _model), Row(Caption("しきい値"), _threshold), _useGpu));
+            "画像から推定", _infer, _inferUnknown, Row(Caption("モデル"), _model), Row(Caption("しきい値"), _threshold), _useGpu));
         tabs.TabPages.Add(Page("仕分け先", _underscore, _includeUnknown, _includeNoMetadata));
         tabs.TabPages.Add(BuildOverridesPage());
 
@@ -886,6 +890,7 @@ public sealed class MainForm : Form
         MinPostCount = (int)_minPosts.Value,
         OverridesPath = string.IsNullOrWhiteSpace(_overrides.Text) ? null : _overrides.Text,
         InferFromImage = _infer.Checked,
+        InferUnknown = _inferUnknown.Checked,
         TaggerModelId = ModelCatalog.All[Math.Max(0, _model.SelectedIndex)].Id,
         CharacterThreshold = (double)_threshold.Value,
         UseGpu = _useGpu.Checked,

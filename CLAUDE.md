@@ -1,7 +1,7 @@
 # CastSieve (CLAUDE.md)
 
 生成AI画像のメタデータ(プロンプト)からキャラクタータグを判別し、キャラクター別フォルダに仕分ける Windows アプリ。
-C# / .NET 8 / WinForms。判別は Danbooru API(タグカテゴリ 4 = character)。メタデータがない画像は WD Tagger(ONNX)で画像から推定。現在のバージョンは `Directory.Build.props` の `<Version>` を見る(1.6.0)。1.6.0 で M Sorter から CastSieve に改名した(姉妹アプリは PromptLoupe、旧 MViewer)。
+C# / .NET 8 / WinForms。判別は Danbooru API(タグカテゴリ 4 = character)。メタデータがない画像と、タグからキャラが見つからない画像は WD Tagger(ONNX)で画像から推定。現在のバージョンは `Directory.Build.props` の `<Version>` を見る(1.7.0)。1.6.0 で M Sorter から CastSieve に改名した(姉妹アプリは PromptLoupe、旧 MViewer)。
 
 ## 作業ルール
 - 返信は日本語で、簡潔に。
@@ -51,7 +51,7 @@ CastSieve/
 ### オプション(タブ: 基本 / 判別 (Danbooru) / 画像から推定 / 仕分け先 / 上書きリスト)
 - 基本: サブフォルダも対象、操作(コピー/移動)、複数キャラの扱い(`_multiple` / 最初の1人 / 各フォルダにコピー)。
 - 判別: Danbooru を使う / 別名タグも解決 / 最小投稿数。
-- 画像から推定: 使う / モデル(wd-swinv2 既定、vit、eva02-large) / しきい値(既定 0.85) / GPU(DirectML、失敗したら CPU に自動切替)。
+- 画像から推定: 使う / タグでキャラが分からない画像も推定(1.7.0、既定オン、`InferUnknown`) / モデル(wd-swinv2 既定、vit、eva02-large) / しきい値(既定 0.85) / GPU(DirectML、失敗したら CPU に自動切替)。
 - 仕分け先: フォルダ名の空白を `_` に、`_unknown` も仕分ける(既定オン)、`_no_metadata` も仕分ける(既定オン)。オフにした画像は「対象外」。
 - 上書きリスト: 「タグ,フォルダ名」の CSV/テキスト(任意)。
 - タブの高さは一番高いタブに合わせる(`FitTabsHeight`)。
@@ -65,7 +65,8 @@ CastSieve/
 ### 画像からの推定(WD Tagger v3)
 - 入力 448、NHWC、BGR、0〜255 の float、白で正方形に余白を足す。`selected_tags.csv` のカテゴリ 4 がキャラクター。
 - モデルは Hugging Face(SmilingWolf)から `%LOCALAPPDATA%\CastSieve\models\<id>\`(`model.onnx`、`selected_tags.csv`)へ、確認のうえダウンロード。
-- 推定で決まった画像は、メタデータ列が `image-ai`。
+- 推定は Danbooru 照会の後(タグで見つかったかを使うため)。対象はメタデータなし + (`InferUnknown` なら)タグでキャラが見つからなかった画像。
+- 推定にかけた画像は、メタデータ列が `image-ai`(メタデータありなら `a1111 + image-ai`)。
 
 ### 画面
 - フォント: Yu Gothic UI 9.5pt(なければ Meiryo UI / Segoe UI)。`AutoScaleMode.Dpi`。
@@ -87,7 +88,7 @@ CastSieve/
 - 大量の画像(数千枚以上)でのグループ表示の速度。
 
 ## 今後の候補
-- 画像推定の精度(約半分が決まらない): **優先度を下げた**(2026-11)。決まらない画像の多くは候補すら出ず、モデルが知らないキャラが原因なので、反転の平均化などでは改善しない。推定はおまけで、本命はメタデータでの仕分け。やるなら見本画像との類似度で判定する方式。
+- 画像推定の精度(約半分が決まらない): **優先度を下げた**(2026-11)。決まらない画像の多くは候補すら出ず、モデルが知らないキャラが原因なので、反転の平均化などでは改善しない。推定はおまけで、本命はメタデータでの仕分け。やるなら見本画像との類似度で判定する方式。ただし 1.6.0 までは `_unknown`(メタデータあり・キャラタグなし)の画像を推定していなかったので、「候補すら出ない」の一部はそれだった可能性がある。1.7.0 で推定するようにしたので、測り直す。
 - 公開: 2026-11-04 に yuu10/CastSieve を Public にし、v1.6.0 を Releases で公開した(Topics: ai-art, danbooru, image-sorter, stable-diffusion, windows)。
 - 配布: `.github/workflows/build.yml`(main と PR でビルド+テスト)、`release.yml`(タグ `v*` で自己完結の単一 exe を発行し、zip を Releases に下書き。タグと `Directory.Build.props` の Version が違うと止まる)。zip には exe・LICENSE・THIRD-PARTY-NOTICES.txt だけ(publish に出る libSkiaSharp.pdb と onnxruntime.lib は消す)。ネイティブ DLL は `IncludeNativeLibrariesForSelfExtract` で exe に入れる。単一 exe では `Assembly.Location` が空になるので使わない。
 - exe のアイコンが変わらない: クリーン→リビルド、アイコンキャッシュ(`ie4uinit.exe -show`)、別フォルダへコピー。
@@ -95,4 +96,4 @@ CastSieve/
 - 制限: NovelAI のステルス PNGInfo(アルファチャンネル埋め込み)は未対応。
 
 ## バージョン履歴(公開前の経緯。マニュアルと README の更新履歴は 1.6.0「最初の公開版」から始まる)
-1.6.0 CastSieve に改名・旧データフォルダの引き継ぎ・アイコン変更(ふるい)・ライセンス表記 / 1.5.0 ダークモード / 1.4.0 仕分け先の手動指定・推定の候補表示・列の並べ替え・ファイルを開く / 1.3.3 ImageSharp → SkiaSharp / 1.3.2 上書きリストをタブ化、タブ高さを統一 / 1.3.1 ビルドエラー修正、ImageSharp 4.1.1 / 1.3.0 見た目改修・タブ化・D&D・要約・グループ表示 / 1.2.1 中止時の例外停止を修正 / 1.2.0 アイコン変更 / 1.1.0 解析と実行の分離・GPU 対応 / 1.0.0 初版
+1.7.0 _unknown の画像も推定 / 1.6.0 CastSieve に改名・旧データフォルダの引き継ぎ・アイコン変更(ふるい)・ライセンス表記 / 1.5.0 ダークモード / 1.4.0 仕分け先の手動指定・推定の候補表示・列の並べ替え・ファイルを開く / 1.3.3 ImageSharp → SkiaSharp / 1.3.2 上書きリストをタブ化、タブ高さを統一 / 1.3.1 ビルドエラー修正、ImageSharp 4.1.1 / 1.3.0 見た目改修・タブ化・D&D・要約・グループ表示 / 1.2.1 中止時の例外停止を修正 / 1.2.0 アイコン変更 / 1.1.0 解析と実行の分離・GPU 対応 / 1.0.0 初版

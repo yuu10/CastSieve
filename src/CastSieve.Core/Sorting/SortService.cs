@@ -11,8 +11,8 @@ namespace CastSieve.Sorting;
 /// 仕分けの流れ(解析と実行は別の操作):
 ///   解析 (<see cref="PlanAsync"/>):
 ///     1) 画像からプロンプトを読み取りタグに分解
-///     2) メタデータがない画像は、必要なら画像から推定
-///     3) 未知のタグをまとめて Danbooru に照会(結果はキャッシュ)
+///     2) 未知のタグをまとめて Danbooru に照会(結果はキャッシュ)
+///     3) メタデータがない画像と、タグからキャラクターが見つからなかった画像は、必要なら画像から推定
 ///     4) キャラクターを判定して仕分け先を決める(ファイルは変更しない)
 ///   実行 (<see cref="ExecuteAsync"/>):
 ///     解析の結果のとおりにコピー/移動する(再解析しない)
@@ -82,14 +82,6 @@ public static class SortService
         }, ct);
         ct.ThrowIfCancellationRequested(); // 途中で中止したときの例外は、デバッガーが止まらないよう呼び出し側で投げる
 
-        // 1.5) 画像からの推定(メタデータがない画像だけ)
-        var warnings = new List<string>();
-        if (options.InferFromImage)
-        {
-            await InferAsync(
-                options, taggerFactory, extracted.Select(e => e.Item).ToList(), progress, warnings, plan.Notes, ct);
-        }
-
         // 2) Danbooru 照会
         using var client = options.UseDanbooru ? new DanbooruClient() : null;
         var cache = new TagCache(options.CachePath ?? TagCache.DefaultPath());
@@ -109,6 +101,19 @@ public static class SortService
             allTags,
             new Progress<ResolveProgress>(p => progress?.Report(new SortProgress(p.Phase, p.Done, p.Total))),
             ct);
+
+        // 2.5) 画像からの推定(メタデータがない画像と、必要ならタグからキャラクターが見つからなかった画像)
+        //      タグで見つかったかどうかを使うので、Danbooru 照会の後に行う
+        var warnings = new List<string>();
+        if (options.InferFromImage)
+        {
+            var targets = extracted
+                .Where(e => e.Item.Source == PromptInfo.None // ファイルを読めなかった画像 (error) は推定しても読めない
+                    || (options.InferUnknown && e.Item.HasMetadata && resolver.FindCharacterFolders(e.Tags).Count == 0))
+                .Select(e => e.Item)
+                .ToList();
+            await InferAsync(options, taggerFactory, targets, progress, warnings, plan.Notes, ct);
+        }
 
         // 3) 仕分け先を決める(ファイルは触らない)
         await Task.Run(() =>
@@ -198,14 +203,12 @@ public static class SortService
     private static async Task InferAsync(
         SortOptions options,
         Func<SortOptions, IImageTagger?>? factory,
-        List<SortItem> items,
+        List<SortItem> targets,
         IProgress<SortProgress>? progress,
         List<string> warnings,
         List<string> notes,
         CancellationToken ct)
     {
-        // 対象はメタデータが「ない」画像だけ。ファイルを読めなかった画像 (error) は推定しても読めない
-        var targets = items.Where(i => i.Source == PromptInfo.None).ToList();
         if (targets.Count == 0) return;
 
         var model = ModelCatalog.Find(options.TaggerModelId);
@@ -246,7 +249,10 @@ public static class SortService
                             else if (item.CandidateCharacters.Count < MaxCandidates)
                                 item.CandidateCharacters.Add(prediction);
                         }
-                        item.Source = ImageInferredSource; // 推定できた画像は「メタデータなし」ではなくなる
+                        // 推定できた画像は「メタデータなし」ではなくなる。メタデータのある画像は形式名を残す
+                        item.Source = item.Source == PromptInfo.None
+                            ? ImageInferredSource
+                            : $"{item.Source} + {ImageInferredSource}";
                     }
                     catch (Exception ex) when (ex is not OperationCanceledException)
                     {

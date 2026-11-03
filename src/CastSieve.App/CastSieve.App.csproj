@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>CastSieve</AssemblyName>
+    <Product>CastSieve</Product>
+    <AssemblyTitle>CastSieve</AssemblyTitle>
+    <RootNamespace>CastSieve.App</RootNamespace>
+    <ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
+    <ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Help\manual.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CastSieve.Core\CastSieve.Core.csproj" />
+  </ItemGroup>
+</Project>

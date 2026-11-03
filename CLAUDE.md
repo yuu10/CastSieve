@@ -5,12 +5,11 @@ C# / .NET 8 / WinForms。判別は Danbooru API(タグカテゴリ 4 = character
 
 ## 作業ルール
 - 返信は日本語で、簡潔に。
-- 説明は **アプリ内マニュアル `src/CastSieve.App/Help/manual.html`(利用者向け)と `README.md`(前半は公開向けの紹介、後半「開発者向けの情報」にビルド・仕組み・構成)の2つ**。これ以外のドキュメントは作らない(ライセンス文の `LICENSE` と `THIRD-PARTY-NOTICES.txt` は別)。
+- 説明は **アプリ内マニュアル `src/CastSieve.App/Help/manual.html`(利用者向け)と `README.md`(前半は公開向けの紹介、後半「開発者向けの情報」にビルド・仕組み・構成)が中心**。必要ならほかのドキュメントを作ってもよい。
 - パッケージを足したり、バージョンを上げたりしたら、`THIRD-PARTY-NOTICES.txt`(NuGet キャッシュのライセンス文を連結したもの)、README とマニュアルの「ライセンス」も直す。
-- 機能を足したら、マニュアル(更新履歴を含む)、README、バージョン(`Directory.Build.props`)を一緒に更新する。更新履歴はマニュアルにだけ書く。
+- 機能を足したら、マニュアル、README、バージョン(`Directory.Build.props`)を一緒に更新する。更新履歴はマニュアルと README の両方に書く。
 - 「実装しないで答えだけ」と言われたら、実装せず、可否と方針だけ答える。
 - ビルド: `dotnet build CastSieve.sln`、テスト: `dotnet test`。変更したら必ずビルドとテストを通す(Claude.ai 版では SDK がなく確認できなかった)。
-- 成果物を渡すときは、必要なら `CastSieve.zip`(先頭フォルダ `CastSieve/`、bin/obj を含めない)。
 - Claude.ai 版では未コンパイルだった API(下の「未確認のリスク」)は、実機で確かめて直してよい。
 
 ## 構成
@@ -32,7 +31,7 @@ CastSieve/
     Help/manual.html           埋め込みリソース(利用者向けの説明書)
     Assets/app.ico
   tests/CastSieve.Tests/       xUnit
-  README.md                    開発者向けの説明
+  README.md                    前半は公開向けの紹介、後半は開発者向けの説明
 ```
 パッケージ: `Microsoft.ML.OnnxRuntime.DirectML` 1.20.1(MIT、依存の DirectML 1.15.2 は Microsoft 独自ライセンスだが再配布可)、`SkiaSharp` 4.154.0(MIT)。ライセンス文と一致させるため、バージョンは固定する。
 - ライセンス: 本体は MIT(Copyright (c) 2026 yuto、PromptLoupe と同じ)。`LICENSE` と `THIRD-PARTY-NOTICES.txt` は App の出力先にコピーされる。WD Tagger のモデルは Apache-2.0 で、同梱しない。配布用の exe は自己完結なので、`THIRD-PARTY-NOTICES.txt` に .NET 8 ランタイム(`microsoft.netcore.app.runtime.win-x64` の LICENSE.TXT と THIRD-PARTY-NOTICES.TXT)と WindowsDesktop(LICENSE)も入れている。
@@ -95,5 +94,5 @@ CastSieve/
 - ダークモード(1.5.0): .NET 8 のまま自前で色を当てる(`Theme.cs`)。「表示」→「テーマ」でシステム / ライト / ダーク、既定はシステム。標準ダイアログと NumericUpDown の上下ボタンは明るいまま。
 - 制限: NovelAI のステルス PNGInfo(アルファチャンネル埋め込み)は未対応。
 
-## バージョン履歴(公開前の経緯。マニュアルの更新履歴は 1.6.0「最初の公開版」から始まる)
+## バージョン履歴(公開前の経緯。マニュアルと README の更新履歴は 1.6.0「最初の公開版」から始まる)
 1.6.0 CastSieve に改名・旧データフォルダの引き継ぎ・アイコン変更(ふるい)・ライセンス表記 / 1.5.0 ダークモード / 1.4.0 仕分け先の手動指定・推定の候補表示・列の並べ替え・ファイルを開く / 1.3.3 ImageSharp → SkiaSharp / 1.3.2 上書きリストをタブ化、タブ高さを統一 / 1.3.1 ビルドエラー修正、ImageSharp 4.1.1 / 1.3.0 見た目改修・タブ化・D&D・要約・グループ表示 / 1.2.1 中止時の例外停止を修正 / 1.2.0 アイコン変更 / 1.1.0 解析と実行の分離・GPU 対応 / 1.0.0 初版

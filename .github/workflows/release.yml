@@ -1,0 +1,84 @@
+# v で始まるタグ(例: v1.6.0)を push したら、配布用の zip を作って Releases に下書きで載せる
+# 中身を確かめてから、GitHub の画面で「Publish release」を押して公開する
+name: リリース
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    # WinForms は Windows でしかビルドできない
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # タグと Directory.Build.props の <Version> が食い違っていたら止める
+      - name: バージョンの確認
+        id: version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}".TrimStart('v')
+          $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if ($tag -ne $version) {
+            Write-Error "タグ ($tag) と Directory.Build.props の Version ($version) が一致しません"
+            exit 1
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: テスト
+        run: dotnet test CastSieve.sln -c Release
+
+      # .NET を入れていない PC でも動くように、自己完結型の単一 exe にする
+      # ONNX Runtime・DirectML・Skia のネイティブ DLL も exe に入れ、起動時に展開する
+      - name: 発行
+        run: >
+          dotnet publish src/CastSieve.App/CastSieve.App.csproj -c Release -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:DebugType=none
+          -o publish
+
+      - name: zip にまとめる
+        shell: pwsh
+        run: |
+          # 配布に要らないもの(ネイティブライブラリのデバッグ情報やインポートライブラリ)は入れない
+          Remove-Item publish/*.pdb, publish/*.lib -ErrorAction SilentlyContinue
+          $zip = "CastSieve-${{ steps.version.outputs.version }}-win-x64.zip"
+          Compress-Archive -Path publish/* -DestinationPath $zip
+          "ZIP=$zip" >> $env:GITHUB_ENV
+
+      - name: Releases に下書きを作る
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $notes = @'
+          ## ダウンロード
+
+          `CastSieve-*-win-x64.zip` を展開して、`CastSieve.exe` を実行してください。.NET のインストールは不要です。
+
+          ## 初めて起動するとき
+
+          コード署名をしていないため、「Windows によって PC が保護されました」と表示されることがあります。「詳細情報」→「実行」で起動できます。
+
+          ## 必要なもの
+
+          - インターネット接続(Danbooru への問い合わせと、画像からの推定に使うモデルのダウンロード)
+          - 画像からの推定を GPU で動かす場合: DirectX 12 に対応した GPU(なければ CPU で動きます)
+
+          ## 変更点
+
+          (ここに書く)
+          '@
+          gh release create "${{ github.ref_name }}" $env:ZIP --draft --title "CastSieve ${{ steps.version.outputs.version }}" --notes $notes

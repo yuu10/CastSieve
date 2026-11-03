@@ -89,7 +89,8 @@ CastSieve/
 
 ## 今後の候補
 - 画像推定の精度(約半分が決まらない): **優先度を下げた**(2026-11)。決まらない画像の多くは候補すら出ず、モデルが知らないキャラが原因なので、反転の平均化などでは改善しない。推定はおまけで、本命はメタデータでの仕分け。やるなら見本画像との類似度で判定する方式。
-- 公開に向けて: ライセンス表記、README の整理、スクリーンショット(`docs/images/main.png`)は済み。残りは、配布形態(PromptLoupe と同じく GitHub Actions でビルド確認とリリース zip、SmartScreen の説明)、リポジトリ yuu10/CastSieve の Public 化。
+- 公開に向けて: ライセンス表記、README の整理、スクリーンショット(`docs/images/main.png`)、配布の仕組みは済み。残りは、リポジトリ yuu10/CastSieve の Public 化と、最初のリリース(タグ v1.6.0)。
+- 配布: `.github/workflows/build.yml`(main と PR でビルド+テスト)、`release.yml`(タグ `v*` で自己完結の単一 exe を発行し、zip を Releases に下書き。タグと `Directory.Build.props` の Version が違うと止まる)。zip には exe・LICENSE・THIRD-PARTY-NOTICES.txt だけ(publish に出る libSkiaSharp.pdb と onnxruntime.lib は消す)。ネイティブ DLL は `IncludeNativeLibrariesForSelfExtract` で exe に入れる。単一 exe では `Assembly.Location` が空になるので使わない。
 - exe のアイコンが変わらない: クリーン→リビルド、アイコンキャッシュ(`ie4uinit.exe -show`)、別フォルダへコピー。
 - ダークモード(1.5.0): .NET 8 のまま自前で色を当てる(`Theme.cs`)。「表示」→「テーマ」でシステム / ライト / ダーク、既定はシステム。標準ダイアログと NumericUpDown の上下ボタンは明るいまま。
 - 制限: NovelAI のステルス PNGInfo(アルファチャンネル埋め込み)は未対応。

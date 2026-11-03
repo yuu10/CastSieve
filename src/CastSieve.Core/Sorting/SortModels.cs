@@ -48,6 +48,11 @@ public sealed class SortOptions
     /// <summary>メタデータがない画像を、画像そのものからキャラクター推定する。</summary>
     public bool InferFromImage { get; init; }
 
+    /// <summary>
+    /// <see cref="InferFromImage"/> のとき、メタデータはあるがタグからキャラクターが見つからなかった画像 (_unknown になる画像) も推定する。
+    /// </summary>
+    public bool InferUnknown { get; init; } = true;
+
     /// <summary>使う推定モデル (<see cref="ModelCatalog"/> の Id)。</summary>
     public string TaggerModelId { get; init; } = ModelCatalog.Default.Id;
 
@@ -73,7 +78,7 @@ public sealed class SortItem
     public string Source { get; set; } = "";
     public List<string> Characters { get; } = new();
 
-    /// <summary>画像から推定したキャラクター(確信度つき)。メタデータがない画像でだけ入る。</summary>
+    /// <summary>画像から推定したキャラクター(確信度つき)。推定にかけた画像(メタデータがない画像など)でだけ入る。</summary>
     public List<TaggerPrediction> InferredCharacters { get; } = new();
 
     /// <summary>推定で、しきい値に届かなかったキャラクター(確信度の高い順)。手で仕分け先を選ぶときの候補。</summary>

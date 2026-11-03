@@ -89,7 +89,7 @@ CastSieve/
 
 ## 今後の候補
 - 画像推定の精度(約半分が決まらない): **優先度を下げた**(2026-11)。決まらない画像の多くは候補すら出ず、モデルが知らないキャラが原因なので、反転の平均化などでは改善しない。推定はおまけで、本命はメタデータでの仕分け。やるなら見本画像との類似度で判定する方式。
-- 公開に向けて: ライセンス表記と README の整理は済み。残りは、README のスクリーンショット、配布形態(PromptLoupe と同じく GitHub Actions でビルド確認とリリース zip、SmartScreen の説明)、リポジトリ yuu10/CastSieve の Public 化。
+- 公開に向けて: ライセンス表記、README の整理、スクリーンショット(`docs/images/main.png`)は済み。残りは、配布形態(PromptLoupe と同じく GitHub Actions でビルド確認とリリース zip、SmartScreen の説明)、リポジトリ yuu10/CastSieve の Public 化。
 - exe のアイコンが変わらない: クリーン→リビルド、アイコンキャッシュ(`ie4uinit.exe -show`)、別フォルダへコピー。
 - ダークモード(1.5.0): .NET 8 のまま自前で色を当てる(`Theme.cs`)。「表示」→「テーマ」でシステム / ライト / ダーク、既定はシステム。標準ダイアログと NumericUpDown の上下ボタンは明るいまま。
 - 制限: NovelAI のステルス PNGInfo(アルファチャンネル埋め込み)は未対応。

@@ -10,6 +10,20 @@ C# / .NET 8 / WinForms。判別は Danbooru API(タグカテゴリ 4 = character
 - 機能を足したら、マニュアル、README、バージョン(`Directory.Build.props`)を一緒に更新する。更新履歴はマニュアルと README の両方に書く。
 - 「実装しないで答えだけ」と言われたら、実装せず、可否と方針だけ答える。
 - ビルド: `dotnet build CastSieve.sln`、テスト: `dotnet test`。変更したら必ずビルドとテストを通す(Claude.ai 版では SDK がなく確認できなかった)。
+- クラウド(Claude Code on the web)での開発: 環境のセットアップスクリプトで .NET 8 SDK を入れる(PromptLoupe と同じ。apt の SDK は WindowsDesktop がなくて使えない)。
+  ```bash
+  #!/bin/bash
+  set -e
+  curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+  bash /tmp/dotnet-install.sh --channel 8.0 --install-dir "$HOME/.dotnet"
+  echo 'export DOTNET_ROOT=$HOME/.dotnet' >> ~/.bashrc
+  echo 'export PATH=$HOME/.dotnet:$PATH' >> ~/.bashrc
+  echo 'export EnableWindowsTargeting=true' >> ~/.bashrc
+  ln -sf $HOME/.dotnet/dotnet /usr/local/bin/dotnet
+  ```
+  - ネットワークで `dot.net` と `builds.dotnet.microsoft.com` を許可しておく(NuGet の復元も必要)。
+  - `EnableWindowsTargeting=true` で、Linux でも App(net8.0-windows)をビルドできる(実行はできない)。テストは Core だけを参照しているので Linux で動く。
+  - クラウドで確かめるのはビルドとテストまで。画面・DirectML・exe の発行は実機(Windows)で確かめる。
 - Claude.ai 版では未コンパイルだった API(下の「未確認のリスク」)は、実機で確かめて直してよい。
 
 ## 構成

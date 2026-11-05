@@ -104,7 +104,7 @@ CastSieve/
 ## 今後の候補
 - **次にやること(.NET 10 化の後)**(2026-11-04 メモ): PromptLoupe を先に .NET 10 にしてから、CastSieve も .NET 10 にする(環境 `dotnet` のセットアップスクリプトは、移行中は 8.0 と 10.0 の両方を入れる)。その後、見た目の調整を2つ。
   - 中止ボタン: 使えるときでも、使えないように見えて分かりづらい(今は薄いグレー)。使えるときと使えないときの差をはっきりさせる。
-  - チェックボックス: オンかオフかが分かりづらい。状態が一目で分かるように調整する(ダークモードも含めて)。
+  - チェックボックス: ダークモードのときだけ、オンかオフかが分かりづらい。ダークモードで状態が一目で分かるように調整する(ライトモードは見えるので変えない)。
 - 画像推定の精度(約半分が決まらない): **優先度を下げた**(2026-11)。決まらない画像の多くは候補すら出ず、モデルが知らないキャラが原因なので、反転の平均化などでは改善しない。推定はおまけで、本命はメタデータでの仕分け。やるなら見本画像との類似度で判定する方式。ただし 1.6.0 までは `_unknown`(メタデータあり・キャラタグなし)の画像を推定していなかったので、「候補すら出ない」の一部はそれだった可能性がある。1.7.0 で推定するようにしたので、測り直す。
 - 公開: 2026-11-04 に yuu10/CastSieve を Public にし、v1.6.0 を Releases で公開した(Topics: ai-art, danbooru, image-sorter, stable-diffusion, windows)。
 - 配布: `.github/workflows/build.yml`(main と PR でビルド+テスト)、`release.yml`(タグ `v*` で自己完結の単一 exe を発行し、zip を Releases に下書き。タグと `Directory.Build.props` の Version が違うと止まる)。zip には exe・LICENSE・THIRD-PARTY-NOTICES.txt だけ(publish に出る libSkiaSharp.pdb と onnxruntime.lib は消す)。ネイティブ DLL は `IncludeNativeLibrariesForSelfExtract` で exe に入れる。単一 exe では `Assembly.Location` が空になるので使わない。

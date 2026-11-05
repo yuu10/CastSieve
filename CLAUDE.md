@@ -1,7 +1,7 @@
 # CastSieve (CLAUDE.md)
 
 生成AI画像のメタデータ(プロンプト)からキャラクタータグを判別し、キャラクター別フォルダに仕分ける Windows アプリ。
-C# / .NET 8 / WinForms。判別は Danbooru API(タグカテゴリ 4 = character)。メタデータがない画像と、タグからキャラが見つからない画像は WD Tagger(ONNX)で画像から推定。現在のバージョンは `Directory.Build.props` の `<Version>` を見る(1.7.0)。1.6.0 で M Sorter から CastSieve に改名した(姉妹アプリは PromptLoupe、旧 MViewer)。
+C# / .NET 10 / WinForms。判別は Danbooru API(タグカテゴリ 4 = character)。メタデータがない画像と、タグからキャラが見つからない画像は WD Tagger(ONNX)で画像から推定。現在のバージョンは `Directory.Build.props` の `<Version>` を見る(1.8.0)。1.6.0 で M Sorter から CastSieve に改名した(姉妹アプリは PromptLoupe、旧 MViewer)。
 
 ## 作業ルール
 - 返信は日本語で、簡潔に。
@@ -10,19 +10,19 @@ C# / .NET 8 / WinForms。判別は Danbooru API(タグカテゴリ 4 = character
 - 機能を足したら、マニュアル、README、バージョン(`Directory.Build.props`)を一緒に更新する。更新履歴はマニュアルと README の両方に書く。
 - 「実装しないで答えだけ」と言われたら、実装せず、可否と方針だけ答える。
 - ビルド: `dotnet build CastSieve.sln`、テスト: `dotnet test`。変更したら必ずビルドとテストを通す(Claude.ai 版では SDK がなく確認できなかった)。
-- クラウド(Claude Code on the web)での開発: 環境のセットアップスクリプトで .NET 8 SDK を入れる(PromptLoupe と同じ。apt の SDK は WindowsDesktop がなくて使えない)。
+- クラウド(Claude Code on the web)での開発: 環境のセットアップスクリプトで .NET 10 SDK を入れる(PromptLoupe と同じ。apt の SDK は WindowsDesktop がなくて使えない)。
   ```bash
   #!/bin/bash
   set -e
   curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
-  bash /tmp/dotnet-install.sh --channel 8.0 --install-dir "$HOME/.dotnet"
+  bash /tmp/dotnet-install.sh --channel 10.0 --install-dir "$HOME/.dotnet"
   echo 'export DOTNET_ROOT=$HOME/.dotnet' >> ~/.bashrc
   echo 'export PATH=$HOME/.dotnet:$PATH' >> ~/.bashrc
   echo 'export EnableWindowsTargeting=true' >> ~/.bashrc
   ln -sf $HOME/.dotnet/dotnet /usr/local/bin/dotnet
   ```
   - ネットワークで `dot.net` と `builds.dotnet.microsoft.com` を許可しておく(NuGet の復元も必要)。
-  - `EnableWindowsTargeting=true` で、Linux でも App(net8.0-windows)をビルドできる(実行はできない)。テストは Core だけを参照しているので Linux で動く。
+  - `EnableWindowsTargeting=true` で、Linux でも App(net10.0-windows)をビルドできる(実行はできない)。テストは Core だけを参照しているので Linux で動く。
   - クラウドで確かめるのはビルドとテストまで。画面・DirectML・exe の発行は実機(Windows)で確かめる。
 - Claude.ai 版では未コンパイルだった API(下の「未確認のリスク」)は、実機で確かめて直してよい。
 
@@ -30,7 +30,7 @@ C# / .NET 8 / WinForms。判別は Danbooru API(タグカテゴリ 4 = character
 ```
 CastSieve/
   Directory.Build.props        Version, Nullable, ImplicitUsings
-  src/CastSieve.Core/          net8.0 (読み取り・判別・仕分け)
+  src/CastSieve.Core/          net10.0 (読み取り・判別・仕分け)
     AppPaths.cs                %LOCALAPPDATA%\CastSieve、旧 MSorter フォルダの引き継ぎ
     Metadata/                  PNG tEXt/zTXt/iTXt, EXIF UserComment, ComfyUI, NovelAI V4, InvokeAI
     Tags/TagParser.cs          重み・強調・<lora:> を除去、小文字+空白に正規化
@@ -38,7 +38,7 @@ CastSieve/
     Tagging/                   WdTagger, ModelCatalog, ModelDownloader, TaggerTagList
     Imaging/                   SkiaImage, ThumbnailMaker, LruCache
     Sorting/                   SortService, SortModels, FolderNames, OverrideFile
-  src/CastSieve.App/           net8.0-windows (WinForms)
+  src/CastSieve.App/           net10.0-windows (WinForms)
     MainForm.cs, ThumbnailListView.cs, ListViewColumnSorter.cs, AppSettings.cs, Program.cs
     Theme.cs, ThemedTabControl.cs  ダークモード(Palette, Theme.Apply, DarkToolStripRenderer)
     Help/HelpForm.cs
@@ -48,7 +48,7 @@ CastSieve/
   README.md                    前半は公開向けの紹介、後半は開発者向けの説明
 ```
 パッケージ: `Microsoft.ML.OnnxRuntime.DirectML` 1.20.1(MIT、依存の DirectML 1.15.2 は Microsoft 独自ライセンスだが再配布可)、`SkiaSharp` 4.154.0(MIT)。ライセンス文と一致させるため、バージョンは固定する。
-- ライセンス: 本体は MIT(Copyright (c) 2026 yuto、PromptLoupe と同じ)。`LICENSE` と `THIRD-PARTY-NOTICES.txt` は App の出力先にコピーされる。WD Tagger のモデルは Apache-2.0 で、同梱しない。配布用の exe は自己完結なので、`THIRD-PARTY-NOTICES.txt` に .NET 8 ランタイム(`microsoft.netcore.app.runtime.win-x64` の LICENSE.TXT と THIRD-PARTY-NOTICES.TXT)と WindowsDesktop(LICENSE)も入れている。
+- ライセンス: 本体は MIT(Copyright (c) 2026 yuto、PromptLoupe と同じ)。`LICENSE` と `THIRD-PARTY-NOTICES.txt` は App の出力先にコピーされる。WD Tagger のモデルは Apache-2.0 で、同梱しない。配布用の exe は自己完結なので、`THIRD-PARTY-NOTICES.txt` に .NET 10 ランタイム(10.0.14、`microsoft.netcore.app.runtime.win-x64` の LICENSE.TXT と THIRD-PARTY-NOTICES.TXT)と WindowsDesktop(LICENSE)も入れている。
 - 1.3.3 で ImageSharp をやめた(4.x は Release ビルドにライセンスキーが必須になったため)。Mac 版を見据えて System.Drawing ではなく SkiaSharp にした。
 - 画像処理は `Imaging/SkiaImage.cs` に集約(EXIF の向きは自前で回転、大きく縮小するときは先にミップマップ付き線形で縮めてからキュービック)。SkiaSharp は BMP を書き出せないので、`ThumbnailMaker` が 24 ビット BMP を自前で組み立てる。
 
@@ -93,6 +93,8 @@ CastSieve/
 - サムネイル: メモリのみ。表示中の行だけ遅延読み込み(同時2枚)、LRU 300枚。設定は `%LOCALAPPDATA%\CastSieve\settings.json`。
 
 ## 注意(C#)
+- .NET 10 の WinForms アナライザー(WFO1000): コントロールの public プロパティは、`DesignerSerializationVisibility` を付けないとビルドエラーになる(`ThumbnailListView.GroupHeaderColors` は Hidden)。
+- Linux のテストでは `libSkiaSharp` がなく、サムネイルのテスト4件が `DllNotFoundException` で落ちる(.NET 8 のときから。Windows の CI では通る)。
 - ラムダの引数名を `_` にしたとき、同じラムダ内で `out _`(破棄)を使うと、引数の `_` と衝突してコンパイルエラーになる(1.3.1 で修正済み)。`out string _` のように型を書く。
 
 ## 未確認のリスク(Claude.ai 版ではコンパイル・実行していない)
@@ -102,15 +104,15 @@ CastSieve/
 - 大量の画像(数千枚以上)でのグループ表示の速度。
 
 ## 今後の候補
-- **次にやること(.NET 10 化の後)**(2026-11-04 メモ): PromptLoupe を先に .NET 10 にしてから、CastSieve も .NET 10 にする(環境 `dotnet` のセットアップスクリプトは、移行中は 8.0 と 10.0 の両方を入れる)。その後、見た目の調整を2つ。
+- **次にやること**(2026-11-04 メモ。.NET 10 化は 1.8.0 で済み): 見た目の調整を2つ。
   - 中止ボタン: 使えるときでも、使えないように見えて分かりづらい(今は薄いグレー)。使えるときと使えないときの差をはっきりさせる。
   - チェックボックス: ダークモードのときだけ、オンかオフかが分かりづらい。ダークモードで状態が一目で分かるように調整する(ライトモードは見えるので変えない)。
 - 画像推定の精度(約半分が決まらない): **優先度を下げた**(2026-11)。決まらない画像の多くは候補すら出ず、モデルが知らないキャラが原因なので、反転の平均化などでは改善しない。推定はおまけで、本命はメタデータでの仕分け。やるなら見本画像との類似度で判定する方式。ただし 1.6.0 までは `_unknown`(メタデータあり・キャラタグなし)の画像を推定していなかったので、「候補すら出ない」の一部はそれだった可能性がある。1.7.0 で推定するようにしたので、測り直す。
 - 公開: 2026-11-04 に yuu10/CastSieve を Public にし、v1.6.0 を Releases で公開した(Topics: ai-art, danbooru, image-sorter, stable-diffusion, windows)。
 - 配布: `.github/workflows/build.yml`(main と PR でビルド+テスト)、`release.yml`(タグ `v*` で自己完結の単一 exe を発行し、zip を Releases に下書き。タグと `Directory.Build.props` の Version が違うと止まる)。zip には exe・LICENSE・THIRD-PARTY-NOTICES.txt だけ(publish に出る libSkiaSharp.pdb と onnxruntime.lib は消す)。ネイティブ DLL は `IncludeNativeLibrariesForSelfExtract` で exe に入れる。単一 exe では `Assembly.Location` が空になるので使わない。
 - exe のアイコンが変わらない: クリーン→リビルド、アイコンキャッシュ(`ie4uinit.exe -show`)、別フォルダへコピー。
-- ダークモード(1.5.0): .NET 8 のまま自前で色を当てる(`Theme.cs`)。「表示」→「テーマ」でシステム / ライト / ダーク、既定はシステム。標準ダイアログと NumericUpDown の上下ボタンは明るいまま。
+- ダークモード(1.5.0): 自前で色を当てる(.NET 9 以降の `Application.SetColorMode` は試験的なので使っていない)(`Theme.cs`)。「表示」→「テーマ」でシステム / ライト / ダーク、既定はシステム。標準ダイアログと NumericUpDown の上下ボタンは明るいまま。
 - 制限: NovelAI のステルス PNGInfo(アルファチャンネル埋め込み)は未対応。
 
 ## バージョン履歴(公開前の経緯。マニュアルと README の更新履歴は 1.6.0「最初の公開版」から始まる)
-1.7.0 _unknown の画像も推定 / 1.6.0 CastSieve に改名・旧データフォルダの引き継ぎ・アイコン変更(ふるい)・ライセンス表記 / 1.5.0 ダークモード / 1.4.0 仕分け先の手動指定・推定の候補表示・列の並べ替え・ファイルを開く / 1.3.3 ImageSharp → SkiaSharp / 1.3.2 上書きリストをタブ化、タブ高さを統一 / 1.3.1 ビルドエラー修正、ImageSharp 4.1.1 / 1.3.0 見た目改修・タブ化・D&D・要約・グループ表示 / 1.2.1 中止時の例外停止を修正 / 1.2.0 アイコン変更 / 1.1.0 解析と実行の分離・GPU 対応 / 1.0.0 初版
+1.8.0 .NET 10 に移行 / 1.7.0 _unknown の画像も推定 / 1.6.0 CastSieve に改名・旧データフォルダの引き継ぎ・アイコン変更(ふるい)・ライセンス表記 / 1.5.0 ダークモード / 1.4.0 仕分け先の手動指定・推定の候補表示・列の並べ替え・ファイルを開く / 1.3.3 ImageSharp → SkiaSharp / 1.3.2 上書きリストをタブ化、タブ高さを統一 / 1.3.1 ビルドエラー修正、ImageSharp 4.1.1 / 1.3.0 見た目改修・タブ化・D&D・要約・グループ表示 / 1.2.1 中止時の例外停止を修正 / 1.2.0 アイコン変更 / 1.1.0 解析と実行の分離・GPU 対応 / 1.0.0 初版

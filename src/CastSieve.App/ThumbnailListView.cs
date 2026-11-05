@@ -20,6 +20,8 @@ internal sealed class ThumbnailListView : ListView
     }
 
     /// <summary>グループ見出しの地と文字の色。null なら Windows のテーマのまま描く。</summary>
+    [System.ComponentModel.Browsable(false)]
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
     public (Color Back, Color Fore)? GroupHeaderColors { get; set; }
 
     protected override void WndProc(ref Message m)

@@ -241,13 +241,14 @@ rem (re:zero),レム</pre>
   <li>SkiaSharp(MIT License): 画像の読み込みと縮小</li>
   <li>ONNX Runtime(MIT License): 画像からの推定</li>
   <li>DirectML(Microsoft Software License Terms): 推定の GPU 実行</li>
-  <li>.NET 8 ランタイムと Windows Forms(MIT License): アプリの土台。配布用の exe に含まれているので、.NET を別に入れる必要はありません</li>
+  <li>.NET 10 ランタイムと Windows Forms(MIT License): アプリの土台。配布用の exe に含まれているので、.NET を別に入れる必要はありません</li>
 </ul>
 <p>画像からの推定に使う WD Tagger v3 のモデル(SmilingWolf)は Apache License 2.0 です。CastSieve には入っておらず、初めて使うときに Hugging Face からダウンロードします。</p>
 <p>キャラクターの判別には Danbooru の公開 API を使っています。CastSieve は Danbooru とは関係のない非公式のツールです。</p>
 
 <h2 id="changes">更新履歴</h2>
 <ul>
+  <li><b>1.8.0</b> .NET 10 に移行しました(配布用の exe に含まれるランタイムが .NET 10 になりました。使い方は変わりません)</li>
   <li><b>1.7.0</b> メタデータはあるがタグからキャラクターが見つからなかった画像も、画像から推定するようにした(オプション「タグでキャラクターが分からない画像も推定」、標準でオン)</li>
   <li><b>1.6.0</b> 最初の公開版</li>
 </ul>

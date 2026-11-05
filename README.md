@@ -1,6 +1,6 @@
 # CastSieve
 
-生成AI画像に埋め込まれたプロンプトからキャラクターを判別して、キャラクター別のフォルダに仕分ける Windows アプリです(C# / WinForms / .NET 8)。
+生成AI画像に埋め込まれたプロンプトからキャラクターを判別して、キャラクター別のフォルダに仕分ける Windows アプリです(C# / WinForms / .NET 10)。
 
 キャラクターかどうかは、プロンプトのタグを **Danbooru のタグ情報(カテゴリ: character)** で調べて判断します。メタデータが消えている画像は、オプションで画像そのものからキャラクターを推定することもできます。
 
@@ -89,6 +89,7 @@ CastSieve の exe にはコード署名をしていません。そのため、�
 
 ## 更新履歴
 
+- **1.8.0** .NET 10 に移行した(配布用の exe に含まれるランタイムが .NET 10 になった。使い方は変わらない)
 - **1.7.0** メタデータはあるがタグからキャラクターが見つからなかった画像も、画像から推定するようにした(オプション「タグでキャラクターが分からない画像も推定」、標準でオン)
 - **1.6.0** 最初の公開版
 
@@ -101,7 +102,7 @@ CastSieve は [MIT License](LICENSE) で配布しています(Copyright (c) 2026
 - [SkiaSharp](https://github.com/mono/SkiaSharp)(MIT License)— 画像の読み込みと縮小
 - [ONNX Runtime](https://github.com/microsoft/onnxruntime)(MIT License)— 画像からの推定
 - [DirectML](https://github.com/microsoft/DirectML)(Microsoft Software License Terms)— 推定の GPU 実行
-- .NET 8 ランタイム / Windows Forms(MIT License)— 配布用の exe に含まれています
+- .NET 10 ランタイム / Windows Forms(MIT License)— 配布用の exe に含まれています
 
 これらのライセンス文は [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) にあります。`LICENSE` と `THIRD-PARTY-NOTICES.txt` は、ビルド・発行のたびに出力先へコピーされます。配布するときは、この2つを exe と一緒に入れてください。
 
@@ -114,7 +115,7 @@ CastSieve は [MIT License](LICENSE) で配布しています(Copyright (c) 2026
 
 ### ビルドと実行
 
-必要なもの: .NET 8 SDK(Windows)
+必要なもの: .NET 10 SDK(Windows)
 
 ```
 dotnet test                                    # テスト(Core のみ。Linux/macOS でも可)
@@ -122,7 +123,7 @@ dotnet run --project src/CastSieve.App         # GUI を起動
 dotnet publish src/CastSieve.App -c Release -r win-x64 --self-contained false
 ```
 
-`CastSieve.sln` を Visual Studio 2022 で開いてもビルドできます。
+`CastSieve.sln` を Visual Studio 2026 で開いてもビルドできます。
 
 main へのプッシュと PR のたびに、GitHub Actions でビルドとテストが通るかを確かめています(`.github/workflows/build.yml`)。
 
@@ -188,7 +189,7 @@ main へのプッシュと PR のたびに、GitHub Actions でビルドとテ�
 
 ### テーマ(ダークモード)
 
-メニュー「表示」→「テーマ」で、システムに合わせる(既定)/ ライト / ダークを選びます(`settings.json` の `Theme`)。.NET 8 の WinForms には標準のダークモードがないので、自前で色を当てています(`Theme.cs`)。
+メニュー「表示」→「テーマ」で、システムに合わせる(既定)/ ライト / ダークを選びます(`settings.json` の `Theme`)。.NET の WinForms のダークモードはまだ試験的な機能なので、自前で色を当てています(`Theme.cs`)。
 
 - 色は `Palette`(`Light` / `Dark`)にまとめ、`Theme.Apply` がコントロールをたどって当てます。ライトのときは `ResetBackColor` などで既定の色に戻します
 - ボタンは `Tag` の `ButtonRole`、集計ラベルは `ChipKind`、補足の文字は `Theme.SubTextTag` で役割を持たせ、テーマを切り替えたら色を当て直します
@@ -204,8 +205,8 @@ main へのプッシュと PR のたびに、GitHub Actions でビルドとテ�
 ### 構成
 
 ```
-src/CastSieve.Core   読み取り・タグ解析・Danbooru 連携・仕分け (net8.0)
-src/CastSieve.App    WinForms の画面 (net8.0-windows)
+src/CastSieve.Core   読み取り・タグ解析・Danbooru 連携・仕分け (net10.0)
+src/CastSieve.App    WinForms の画面 (net10.0-windows)
 tests/CastSieve.Tests xUnit (Danbooru は偽サーバーで検証)
 ```
 
